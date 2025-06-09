@@ -1,0 +1,54 @@
+(module
+  ;; Import memory
+  (import "env" "memory" (memory 1))
+
+  ;; Storage declarations
+  (global $BALANCES_KEY i32 (i32.const 0))
+  (global $TOTAL_SUPPLY i32 (i32.const 1000000))
+
+  ;; Transfer tokens
+  (func $transfer (param $to i32) (param $amount i32) (result i32)
+    (local $from_balance i32)
+    (local $to_balance i32)
+
+    ;; Load sender balance
+    (call $get_balance (get_global $BALANCES_KEY))
+    (local.set $from_balance)
+
+    ;; Check if sender has enough tokens
+    (i32.lt_u (local.get $from_balance) (local.get $amount))
+    if
+      (return (i32.const 0))
+    end
+
+    ;; Load recipient balance
+    (call $get_balance (local.get $to))
+    (local.set $to_balance)
+
+    ;; Update balances
+    (call $set_balance 
+      (get_global $BALANCES_KEY)
+      (i32.sub (local.get $from_balance) (local.get $amount))
+    )
+    (call $set_balance
+      (local.get $to)
+      (i32.add (local.get $to_balance) (local.get $amount))
+    )
+
+    (i32.const 1)
+  )
+
+  ;; Get balance for address
+  (func $get_balance (param $addr i32) (result i32)
+    (i32.load (local.get $addr))
+  )
+
+  ;; Set balance for address
+  (func $set_balance (param $addr i32) (param $amount i32)
+    (i32.store (local.get $addr) (local.get $amount))
+  )
+
+  ;; Export functions
+  (export "transfer" (func $transfer))
+  (export "balanceOf" (func $get_balance))
+)

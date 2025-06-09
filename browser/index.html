@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ZHTP Browser</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .search-bar {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .content {
+            margin-bottom: 20px;
+        }
+        .contracts {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 4px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>ZHTP Decentralized Browser</h1>
+            <p>Browse the decentralized web securely and privately</p>
+        </div>
+
+        <div class="search">
+            <input type="text" class="search-bar" placeholder="Search content or enter ZHTP address" id="searchInput">
+            <button onclick="search()">Search</button>
+        </div>
+
+        <div class="content" id="content">
+            <!-- Content will be loaded here -->
+        </div>
+
+        <div class="contracts">
+            <h3>Smart Contracts</h3>
+            <div>
+                <h4>Token Contract</h4>
+                <input type="text" id="recipientAddr" placeholder="Recipient address">
+                <input type="number" id="amount" placeholder="Amount">
+                <button onclick="transferTokens()">Transfer</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class ZhtpClient {
+            constructor() {
+                this.baseUrl = 'http://localhost:9100';
+            }
+
+            async search(query) {
+                const response = await fetch(`${this.baseUrl}/search?q=${query}`);
+                return await response.json();
+            }
+
+            async getContent(id) {
+                const response = await fetch(`${this.baseUrl}/content/${id}`);
+                return await response.json();
+            }
+
+            async callContract(contractId, method, params) {
+                const response = await fetch(`${this.baseUrl}/contract/${contractId}/${method}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ params }),
+                });
+                return await response.json();
+            }
+        }
+
+        const client = new ZhtpClient();
+
+        async function search() {
+            const query = document.getElementById('searchInput').value;
+            const content = document.getElementById('content');
+            
+            try {
+                const results = await client.search(query);
+                content.innerHTML = `
+                    <h3>Search Results</h3>
+                    <ul>
+                        ${results.map(result => `
+                            <li>
+                                <h4>${result.metadata.content_type}</h4>
+                                <p>ID: ${result.id}</p>
+                                <button onclick="loadContent('${result.id}')">Load</button>
+                            </li>
+                        `).join('')}
+                    </ul>
+                `;
+            } catch (error) {
+                content.innerHTML = `<p>Error: ${error.message}</p>`;
+            }
+        }
+
+        async function loadContent(id) {
+            const content = document.getElementById('content');
+            try {
+                const result = await client.getContent(id);
+                content.innerHTML = `
+                    <h3>Content</h3>
+                    <div class="content-display">
+                        ${renderContent(result)}
+                    </div>
+                `;
+            } catch (error) {
+                content.innerHTML = `<p>Error: ${error.message}</p>`;
+            }
+        }
+
+        async function transferTokens() {
+            const recipient = document.getElementById('recipientAddr').value;
+            const amount = document.getElementById('amount').value;
+            
+            try {
+                const result = await client.callContract('token', 'transfer', [recipient, amount]);
+                alert(result.success ? 'Transfer successful!' : 'Transfer failed');
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+            }
+        }
+
+        function renderContent(content) {
+            switch (content.metadata.content_type) {
+                case 'text/plain':
+                    return `<pre>${content.data}</pre>`;
+                case 'text/html':
+                    return `<iframe srcdoc="${content.data}"></iframe>`;
+                case 'image':
+                    return `<img src="data:image;base64,${content.data}" />`;
+                default:
+                    return `<p>Unknown content type: ${content.metadata.content_type}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>
