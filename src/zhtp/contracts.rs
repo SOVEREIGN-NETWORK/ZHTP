@@ -10,6 +10,7 @@ use wasmi::{
 };
 
 /// Contract execution environment
+#[derive(Debug)]
 pub struct WasmRuntime {
     engine: Engine,
     store: Store<()>,

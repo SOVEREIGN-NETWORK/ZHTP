@@ -227,10 +227,6 @@ impl Network {
             .map(|n| n.metrics.reputation_score)
             .unwrap_or(1.0);
             
-        // Calculate effective drop rate including network conditions
-        let base_drop_rate = condition.packet_loss_rate * condition.latency_multiplier;
-        
-        // Adjust drop rate based on reputation
         // Calculate drop rate adjustment based on reputation
         let base_drop_rate = condition.packet_loss_rate * condition.latency_multiplier;
         let modifier = if reputation > 0.8 {

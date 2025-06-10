@@ -12,27 +12,54 @@ use crate::{
     consensus::NetworkMetrics,
     storage::ContentMetadata,
 };
+
 use tokio::{
     net::UdpSocket,
     sync::{Mutex, RwLock},
     time::Duration,
 };
 
+pub mod bridge;
 pub mod contracts;
 pub mod crypto;
 pub mod routing;
+pub mod tunnel;
 pub mod zk_proofs;
 
+mod routing_proof_serde {
+    use serde::{Serialize, Deserialize, Serializer, Deserializer};
+    use super::zk_proofs::ByteRoutingProof;
+
+    pub fn serialize<S>(proof: &ByteRoutingProof, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        Serialize::serialize(proof, serializer)
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<ByteRoutingProof, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        Deserialize::deserialize(deserializer)
+    }
+}
+
+pub use bridge::{ChainAdapter, CrossChainMessage, StateVerifier};
 pub use contracts::WasmRuntime;
 pub use crypto::{Keypair, Signature, KeyPackage, KeyStatus};
 pub use routing::{NodeInfo, RoutingTable};
+pub use tunnel::{HttpsTunnel, RequestMapper, TunnelMetrics, TunnelReward};
+pub use zk_proofs::{RoutingProof, ByteRoutingProof};
+
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct ZhtpPacket {
     pub header: PacketHeader,
     pub payload: Vec<u8>,
     pub key_package: Option<KeyPackage>,
-    pub routing_proof: RoutingProof,
+    #[serde(with = "routing_proof_serde")]
+    pub routing_proof: ByteRoutingProof,
     pub signature: Signature,
 }
 
@@ -43,21 +70,6 @@ pub struct PacketHeader {
     pub destination_commitment: [u8; 32],
     pub ttl: u8,
     pub routing_metadata: Vec<u8>,
-}
-
-#[derive(Clone, Serialize, Deserialize)]
-pub struct RoutingProof {
-    pub proof: Vec<u8>,
-    pub public_inputs: Vec<u8>,
-}
-
-impl RoutingProof {
-    pub fn new(proof: Vec<u8>, inputs: Vec<u8>) -> Self {
-        RoutingProof {
-            proof,
-            public_inputs: inputs,
-        }
-    }
 }
 
 #[derive(Clone)]
@@ -116,6 +128,17 @@ pub struct ZhtpNode {
     message_handler: Option<tokio::sync::mpsc::Sender<Vec<u8>>>,
     content_store: Arc<RwLock<HashMap<String, (Vec<u8>, ContentMetadata)>>>,
     runtime: Arc<Mutex<WasmRuntime>>,
+}
+
+impl ZhtpPacket {
+    pub fn with_routing_proof(mut self, proof: RoutingProof) -> Self {
+        self.routing_proof = ByteRoutingProof::from(proof);
+        self
+    }
+
+    pub fn get_routing_proof(&self) -> Result<RoutingProof, ark_serialize::SerializationError> {
+        RoutingProof::try_from(self.routing_proof.clone())
+    }
 }
 
 impl ZhtpNode {
@@ -220,6 +243,7 @@ impl ZhtpNode {
             Ok(vec![])
         }
     }
+    
 
     pub async fn create_packet(&self, destination: SocketAddr, payload: Vec<u8>) -> Result<ZhtpPacket> {
         let header = PacketHeader {
@@ -237,7 +261,11 @@ impl ZhtpNode {
             header,
             payload,
             key_package: None,
-            routing_proof: RoutingProof::new(vec![], vec![]),
+            routing_proof: ByteRoutingProof {
+                commitments: vec![],
+                elements: vec![],
+                inputs: vec![],
+            },
             signature,
         })
     }

@@ -21,7 +21,11 @@ pub use std::sync::Arc;
 pub use tokio::sync::Mutex;
 
 // Re-export key components
-pub use zhtp::{Keypair, ZhtpNode, ZhtpPacket, SharedNode};
+pub use zhtp::{
+    Keypair, ZhtpNode, ZhtpPacket, SharedNode,
+    bridge::{ChainAdapter, CrossChainMessage, StateVerifier},
+    tunnel::{HttpsTunnel, TunnelMetrics, TunnelReward},
+};
 pub use browser::ZhtpBrowser;
 pub use contracts::ContractExecutor;
 
