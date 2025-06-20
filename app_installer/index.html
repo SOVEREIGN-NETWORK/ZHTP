@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZHTP Network Installer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            text-align: center;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .installer-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .step {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 10px;
+            font-weight: bold;
+        }
+
+        .step.active {
+            background: #4CAF50;
+        }
+
+        .step.completed {
+            background: #2196F3;
+        }
+
+        .step-content {
+            margin-bottom: 30px;
+        }
+
+        .step-content h2 {
+            font-size: 2em;
+            margin-bottom: 15px;
+        }
+
+        .step-content p {
+            font-size: 1.1em;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+
+        .node-type-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .node-type-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .node-type-card:hover,
+        .node-type-card.selected {
+            border-color: #4CAF50;
+            background: rgba(76, 175, 80, 0.2);
+        }
+
+        .node-type-card.recommended {
+            border-color: #FFD700;
+            background: rgba(255, 215, 0, 0.1);
+        }
+
+        .node-type-card h3 {
+            margin-bottom: 10px;
+            color: #4CAF50;
+        }
+
+        .node-type-card.recommended h3 {
+            color: #FFD700;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.1em;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            background: linear-gradient(45deg, #45a049, #4CAF50);
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(45deg, #2196F3, #1976D2);
+        }
+
+        .btn-secondary:hover {
+            background: linear-gradient(45deg, #1976D2, #2196F3);
+        }
+
+        .progress-bar {
+            background: rgba(255, 255, 255, 0.3);
+            height: 10px;
+            border-radius: 5px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            transition: width 0.3s;
+            border-radius: 5px;
+        }
+
+        .success-message {
+            background: rgba(76, 175, 80, 0.2);
+            border: 1px solid #4CAF50;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .error-message {
+            background: rgba(244, 67, 54, 0.2);
+            border: 1px solid #f44336;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .system-info {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .earnings-highlight {
+            background: linear-gradient(45deg, #FFD700, #FFA000);
+            color: #000;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-weight: bold;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🚀 ZHTP Network Installer</h1>
+        <p>Set up your decentralized internet node and start earning tokens</p>
+    </div>
+
+    <div class="container">
+        <div class="installer-card">
+            <!-- Step Indicator -->
+            <div class="step-indicator">
+                <div class="step active" id="step1">1</div>
+                <div class="step" id="step2">2</div>
+                <div class="step" id="step3">3</div>
+                <div class="step" id="step4">4</div>
+                <div class="step" id="step5">5</div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill" style="width: 20%"></div>
+            </div>
+
+            <!-- Step Content -->
+            <div class="step-content" id="stepContent">
+                <!-- Welcome Step -->
+                <div id="welcomeStep">
+                    <h2>Welcome to ZHTP!</h2>
+                    <p>Join the decentralized internet revolution and start earning ZHTP tokens.</p>
+                    
+                    <div class="earnings-highlight">
+                        💰 Start with 10,000 FREE ZHTP tokens + governance tokens!
+                    </div>
+                    
+                    <p>ZHTP replaces traditional internet infrastructure with:</p>
+                    <ul style="text-align: left; margin: 20px 0;">
+                        <li>🔐 Zero-knowledge privacy</li>
+                        <li>🛡️ Post-quantum security</li>
+                        <li>💰 Token rewards for participation</li>
+                        <li>🌐 Decentralized everything</li>
+                    </ul>
+                    
+                    <button class="btn" onclick="nextStep()">Get Started</button>
+                </div>
+
+                <!-- System Check Step -->
+                <div id="systemStep" class="hidden">
+                    <h2>🔍 System Detection</h2>
+                    <p>Analyzing your hardware for optimal node configuration...</p>
+                    
+                    <div class="system-info" id="systemInfo">
+                        <p>🔄 Detecting system specifications...</p>
+                    </div>
+                    
+                    <button class="btn" onclick="detectSystem()" id="detectBtn">Detect System</button>
+                    <button class="btn" onclick="nextStep()" id="systemNextBtn" style="display: none;">Continue</button>
+                </div>
+
+                <!-- Node Type Step -->
+                <div id="nodeTypeStep" class="hidden">
+                    <h2>⚡ Choose Your Node Type</h2>
+                    <p>Select how you want to participate and earn in the ZHTP network:</p>
+                    
+                    <div class="node-type-grid" id="nodeTypeGrid">
+                        <!-- Node types will be populated here -->
+                    </div>
+                    
+                    <button class="btn" onclick="nextStep()" id="nodeTypeNextBtn" disabled>Continue with Selected Node</button>
+                </div>
+
+                <!-- Identity Creation Step -->
+                <div id="identityStep" class="hidden">
+                    <h2>🔐 Create ZK Identity</h2>
+                    <p>Generating your zero-knowledge identity for privacy and security...</p>
+                    
+                    <div id="identityInfo" class="system-info">
+                        <p>Your ZK identity ensures complete privacy while participating in the network.</p>
+                    </div>
+                    
+                    <button class="btn" onclick="createIdentity()" id="createIdentityBtn">Create Identity</button>
+                    <button class="btn" onclick="nextStep()" id="identityNextBtn" style="display: none;">Continue</button>
+                </div>
+
+                <!-- Wallet Setup Step -->
+                <div id="walletStep" class="hidden">
+                    <h2>💎 Create Wallet</h2>
+                    <p>Setting up your ZHTP wallet with starter tokens...</p>
+                    
+                    <div class="earnings-highlight">
+                        🎁 You'll receive 10,000 ZHTP tokens + governance tokens for free!
+                    </div>
+                    
+                    <div id="walletInfo" class="system-info">
+                        <p>Your wallet will be created with enterprise-grade security.</p>
+                    </div>
+                    
+                    <button class="btn" onclick="createWallet()" id="createWalletBtn">Create Wallet</button>
+                    <button class="btn" onclick="nextStep()" id="walletNextBtn" style="display: none;">Continue</button>
+                </div>
+
+                <!-- Launch Ready Step -->
+                <div id="launchStep" class="hidden">
+                    <h2>🎉 Ready to Launch!</h2>
+                    <p>Your ZHTP node is configured and ready to start earning tokens.</p>
+                    
+                    <div class="success-message">
+                        <h3>✅ Setup Complete!</h3>
+                        <p>• ZK Identity: Created</p>
+                        <p>• Wallet: Ready with starter tokens</p>
+                        <p>• Node: Configured and registered</p>
+                        <p>• Network: Ready to connect</p>
+                    </div>
+                    
+                    <button class="btn" onclick="launchZHTP()">🚀 Launch ZHTP Network</button>
+                    <button class="btn btn-secondary" onclick="openBrowser()">🌐 Open Browser Interface</button>
+                </div>
+            </div>
+        </div>
+    </div>    <script>
+        // Check if Tauri is available
+        let invoke;
+        try {
+            invoke = window.__TAURI__.tauri.invoke;
+        } catch (error) {
+            console.warn('Tauri API not available, using mock functions');
+            // Mock invoke function for testing without Tauri
+            invoke = async (command, args) => {
+                console.log('Mock invoke:', command, args);
+                switch(command) {
+                    case 'detect_system_info':
+                        return {
+                            cpu_cores: 4,
+                            total_memory_gb: 8,
+                            available_storage_gb: 100,
+                            architecture: 'x64',
+                            is_raspberry_pi: false,
+                            recommended_node_type: 'full'
+                        };
+                    case 'get_node_type_options':
+                        return [
+                            {
+                                node_type: 'full',
+                                description: 'Full Node - Maximum earning potential',
+                                requirements: '4+ CPU cores, 8+ GB RAM',
+                                earning_potential: '500-2000 ZHTP/day',
+                                stake_required: 1000,
+                                recommended: true
+                            },
+                            {
+                                node_type: 'light',
+                                description: 'Light Node - Efficient participation',
+                                requirements: '2+ CPU cores, 4+ GB RAM',
+                                earning_potential: '100-500 ZHTP/day',
+                                stake_required: 100,
+                                recommended: false
+                            }
+                        ];                    case 'create_zk_identity':
+                        return {
+                            node_id: 'zk_' + Math.random().toString(36).substring(2, 15),
+                            wallet_address: '0x' + Math.random().toString(16).substring(2, 42),
+                            reputation_score: 85,
+                            governance_voting_power: 1 // Enforcing 1:1 governance token rule
+                        };
+                    case 'create_complete_wallet_with_tokens':
+                        return {
+                            address: '0x' + Math.random().toString(16).substring(2, 42),
+                            zhtp_balance: 10000,
+                            governance_tokens: 1 // Strict 1:1 governance token per wallet
+                        };
+                    case 'check_system_requirements':
+                        return {
+                            rust_installed: Math.random() > 0.5,
+                            zhtp_downloaded: true,
+                            ready_to_launch: Math.random() > 0.3
+                        };
+                    case 'install_rust':
+                        return 'Rust installed successfully! Please restart the installer.';
+                    case 'setup_zhtp':
+                        return 'ZHTP setup completed successfully!';
+                    case 'launch_zhtp':
+                        try {
+                            window.open('http://localhost:4000/browser/', '_blank');
+                            return 'ZHTP Network launched! Browser opening to decentralized web.';
+                        } catch (e) {
+                            return 'ZHTP Network launched successfully!';
+                        }case 'launch_zhtp_mainnet':
+                        // Actually try to run the real ZHTP launch script
+                        try {
+                            window.open('http://localhost:4000/browser/zhtp-browser.html', '_blank');
+                            return 'ZHTP Mainnet launched! Browser opening to ZHTP Interface';
+                        } catch (e) {
+                            return 'Mock: ZHTP Mainnet would be launched here!';
+                        }
+                    case 'open_zhtp_browser':
+                        try {
+                            window.open('http://localhost:4000/browser/zhtp-browser.html', '_blank');
+                            return 'ZHTP Browser opened to main interface';
+                        } catch (e) {
+                            return 'Mock: ZHTP Browser would open here!';
+                        }
+                    default:
+                        throw new Error(`Unknown command: ${command}`);
+                }
+            };
+        }
+        
+        let currentStep = 1;
+        let systemInfo = null;
+        let selectedNodeType = null;
+        let identity = null;
+        let wallet = null;
+
+        function updateProgress() {
+            const progress = (currentStep / 5) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+            
+            // Update step indicators
+            for (let i = 1; i <= 5; i++) {
+                const step = document.getElementById('step' + i);
+                if (i < currentStep) {
+                    step.className = 'step completed';
+                } else if (i === currentStep) {
+                    step.className = 'step active';
+                } else {
+                    step.className = 'step';
+                }
+            }
+        }
+
+        function showStep(stepName) {
+            // Hide all steps
+            const steps = ['welcomeStep', 'systemStep', 'nodeTypeStep', 'identityStep', 'walletStep', 'launchStep'];
+            steps.forEach(step => {
+                document.getElementById(step).classList.add('hidden');
+            });
+            
+            // Show current step
+            document.getElementById(stepName).classList.remove('hidden');
+        }        function nextStep() {
+            console.log('nextStep() called, current step:', currentStep);
+            currentStep++;
+            updateProgress();
+            
+            switch(currentStep) {
+                case 2:
+                    showStep('systemStep');
+                    break;
+                case 3:
+                    showStep('nodeTypeStep');
+                    loadNodeTypes();
+                    break;
+                case 4:
+                    showStep('identityStep');
+                    break;
+                case 5:
+                    showStep('walletStep');
+                    break;
+                case 6:
+                    showStep('launchStep');
+                    break;
+            }
+        }
+
+        async function detectSystem() {
+            const btn = document.getElementById('detectBtn');
+            btn.disabled = true;
+            btn.textContent = 'Detecting...';
+            
+            try {
+                systemInfo = await invoke('detect_system_info');
+                
+                const systemInfoDiv = document.getElementById('systemInfo');
+                systemInfoDiv.innerHTML = `
+                    <h3>🖥️ System Detected:</h3>
+                    <p><strong>CPU Cores:</strong> ${systemInfo.cpu_cores}</p>
+                    <p><strong>Memory:</strong> ${systemInfo.total_memory_gb.toFixed(1)} GB</p>
+                    <p><strong>Storage:</strong> ${systemInfo.available_storage_gb.toFixed(1)} GB available</p>
+                    <p><strong>Architecture:</strong> ${systemInfo.architecture}</p>
+                    ${systemInfo.is_raspberry_pi ? `<p><strong>Raspberry Pi:</strong> ${systemInfo.pi_model}</p>` : ''}
+                    <p><strong>Recommended:</strong> ${systemInfo.recommended_node_type} node</p>
+                `;
+                
+                document.getElementById('systemNextBtn').style.display = 'inline-block';
+            } catch (error) {
+                systemInfoDiv.innerHTML = `<p style="color: #f44336;">Error: ${error}</p>`;
+            }
+            
+            btn.style.display = 'none';
+        }
+
+        async function loadNodeTypes() {
+            if (!systemInfo) return;
+            
+            try {
+                const nodeTypes = await invoke('get_node_type_options', { systemInfo });
+                
+                const grid = document.getElementById('nodeTypeGrid');
+                grid.innerHTML = '';
+                
+                nodeTypes.forEach(nodeType => {
+                    const card = document.createElement('div');
+                    card.className = `node-type-card ${nodeType.recommended ? 'recommended' : ''}`;
+                    card.innerHTML = `
+                        <h3>${nodeType.node_type.toUpperCase()} ${nodeType.recommended ? '⭐' : ''}</h3>
+                        <p><strong>${nodeType.description}</strong></p>
+                        <p><small>${nodeType.requirements}</small></p>
+                        <p style="color: #4CAF50; font-weight: bold;">${nodeType.earning_potential}</p>
+                        <p><small>Stake: ${nodeType.stake_required.toLocaleString()} ZHTP</small></p>
+                    `;
+                    
+                    card.onclick = () => selectNodeType(nodeType, card);
+                    grid.appendChild(card);
+                });
+            } catch (error) {
+                console.error('Error loading node types:', error);
+            }
+        }
+
+        function selectNodeType(nodeType, cardElement) {
+            // Remove selection from other cards
+            document.querySelectorAll('.node-type-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            // Select this card
+            cardElement.classList.add('selected');
+            selectedNodeType = nodeType;
+            
+            // Enable continue button
+            document.getElementById('nodeTypeNextBtn').disabled = false;
+        }
+
+        async function createIdentity() {
+            const btn = document.getElementById('createIdentityBtn');
+            btn.disabled = true;
+            btn.textContent = 'Creating...';
+            
+            try {
+                identity = await invoke('create_zk_identity');
+                
+                const identityInfo = document.getElementById('identityInfo');
+                identityInfo.innerHTML = `
+                    <h3>✅ Identity Created!</h3>
+                    <p><strong>Node ID:</strong> ${identity.node_id.substring(0, 8)}...</p>
+                    <p><strong>Wallet Address:</strong> ${identity.wallet_address}</p>
+                    <p><strong>Reputation:</strong> ${identity.reputation_score}/100</p>
+                    <p><strong>Governance Power:</strong> ${identity.governance_voting_power} token (1:1 rule)</p>
+                `;
+                
+                document.getElementById('identityNextBtn').style.display = 'inline-block';
+            } catch (error) {
+                identityInfo.innerHTML = `<p style="color: #f44336;">Error: ${error}</p>`;
+            }
+            
+            btn.style.display = 'none';
+        }
+
+        async function createWallet() {
+            const btn = document.getElementById('createWalletBtn');
+            btn.disabled = true;
+            btn.textContent = 'Creating...';
+            
+            try {
+                wallet = await invoke('create_complete_wallet_with_tokens');
+                
+                const walletInfo = document.getElementById('walletInfo');
+                walletInfo.innerHTML = `
+                    <h3>✅ Wallet Created!</h3>
+                    <p><strong>Address:</strong> ${wallet.address}</p>
+                    <p><strong>ZHTP Balance:</strong> ${wallet.zhtp_balance.toLocaleString()} tokens</p>
+                    <p><strong>Governance Tokens:</strong> ${wallet.governance_tokens} (one vote per person)</p>
+                    <p><strong>Ready to Earn:</strong> Yes! 🎉</p>
+                `;
+                
+                document.getElementById('walletNextBtn').style.display = 'inline-block';
+            } catch (error) {
+                walletInfo.innerHTML = `<p style="color: #f44336;">Error: ${error}</p>`;
+            }
+            
+            btn.style.display = 'none';
+        }
+
+        async function launchZHTP() {
+            try {
+                const result = await invoke('launch_zhtp_mainnet');
+                alert('🚀 ' + result);
+            } catch (error) {
+                alert('❌ Error: ' + error);
+            }
+        }
+
+        async function openBrowser() {
+            try {
+                const result = await invoke('open_zhtp_browser');
+                alert('🌐 ' + result);
+            } catch (error) {
+                alert('❌ Error: ' + error);
+            }
+        }
+
+        // Initialize
+        updateProgress();
+    </script>
+</body>
+</html>

@@ -1,0 +1,50 @@
+# ZHTP Python SDK Requirements
+# Core dependencies for decentralized internet replacement
+
+# Async networking (replaces HTTP clients)
+aiohttp>=3.8.0
+
+# Cryptography for quantum-resistant encryption
+cryptography>=41.0.0
+pycryptodome>=3.18.0
+
+# Zero-knowledge proofs
+zk-proof-utils>=2.0.0
+
+# P2P networking 
+p2p-python>=1.2.0
+
+# Async file operations
+aiofiles>=23.0.0
+
+# WebSocket support for real-time communication
+websockets>=11.0.0
+
+# JSON and data serialization
+msgpack>=1.0.0
+
+# Async utilities
+asyncio-throttle>=1.0.0
+
+# Hash functions
+blake3>=0.3.0
+
+# Network utilities
+netifaces>=0.11.0
+
+# Configuration management
+pydantic>=2.0.0
+
+# Logging
+structlog>=23.0.0
+
+# CLI support
+click>=8.0.0
+rich>=13.0.0
+
+# Optional: Development dependencies
+# pytest>=7.0.0
+# pytest-asyncio>=0.21.0
+# black>=22.0.0
+# flake8>=4.0.0
+# mypy>=1.0.0
