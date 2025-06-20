@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZHTP Network - One-Click Setup</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        
+        .logo {
+            font-size: 3em;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+            backdrop-filter: blur(10px);
+        }
+        
+        .btn {
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.1em;
+            cursor: pointer;
+            margin: 10px;
+            min-width: 200px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        
+        .status.success {
+            background: rgba(76, 175, 80, 0.3);
+        }
+        
+        .status.error {
+            background: rgba(244, 67, 54, 0.3);
+        }
+        
+        .status.info {
+            background: rgba(33, 150, 243, 0.3);
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .progress {
+            width: 100%;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #4ecdc4, #44a08d);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">🚀 ZHTP Network</div>
+        <div class="card">
+            <h2>One-Click Installer</h2>
+            <p>Complete decentralized internet setup in minutes!</p>
+            
+            <div class="progress">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            
+            <div id="status" class="status info">
+                Checking system requirements...
+            </div>
+            
+            <div id="buttons">
+                <button class="btn" id="checkBtn" onclick="checkSystem()">Check System</button>
+                <button class="btn" id="installRustBtn" onclick="installRust()" style="display:none;">Install Rust</button>
+                <button class="btn" id="setupBtn" onclick="setupZHTP()" style="display:none;">Setup ZHTP</button>
+                <button class="btn" id="launchBtn" onclick="launchZHTP()" style="display:none;">Launch ZHTP</button>
+                <button class="btn" id="browserBtn" onclick="openBrowser()" style="display:none;">Open Browser</button>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h3>What will this do?</h3>
+            <p>✅ Install Rust programming language</p>
+            <p>✅ Download and build ZHTP network</p>
+            <p>✅ Create your decentralized identity</p>
+            <p>✅ Set up your ZHTP wallet</p>
+            <p>✅ Launch your network node</p>
+            <p>✅ Open the ZHTP browser interface</p>
+        </div>
+    </div>
+
+    <script>
+        const { invoke } = window.__TAURI__.tauri;
+        
+        let currentStep = 0;
+        const totalSteps = 4;
+        
+        async function checkSystem() {
+            updateStatus('Checking system requirements...', 'info');
+            updateProgress(25);
+            
+            try {
+                const status = await invoke('check_system_requirements');
+                
+                if (status.ready_to_launch) {
+                    updateStatus('✅ System ready! ZHTP is already set up.', 'success');
+                    updateProgress(100);
+                    showButton('launchBtn');
+                    showButton('browserBtn');
+                } else if (status.rust_installed && status.zhtp_downloaded) {
+                    updateStatus('✅ Rust installed, ZHTP downloaded. Ready to launch!', 'success');
+                    updateProgress(75);
+                    showButton('launchBtn');
+                } else if (status.rust_installed) {
+                    updateStatus('✅ Rust installed. Ready to setup ZHTP!', 'success');
+                    updateProgress(50);
+                    showButton('setupBtn');
+                } else {
+                    updateStatus('❌ Rust not found. Click to install Rust first.', 'error');
+                    updateProgress(0);
+                    showButton('installRustBtn');
+                }
+            } catch (error) {
+                updateStatus('❌ Error checking system: ' + error, 'error');
+            }
+            
+            hideButton('checkBtn');
+        }
+        
+        async function installRust() {
+            updateStatus('Installing Rust... This may take a few minutes.', 'info');
+            updateProgress(25);
+            
+            try {
+                const result = await invoke('install_rust');
+                updateStatus('✅ ' + result, 'success');
+                updateProgress(50);
+                hideButton('installRustBtn');
+                showButton('setupBtn');
+            } catch (error) {
+                updateStatus('❌ Failed to install Rust: ' + error, 'error');
+            }
+        }
+        
+        async function setupZHTP() {
+            updateStatus('Setting up ZHTP... This may take several minutes.', 'info');
+            updateProgress(50);
+            
+            try {
+                const result = await invoke('setup_zhtp');
+                updateStatus('✅ ' + result, 'success');
+                updateProgress(75);
+                hideButton('setupBtn');
+                showButton('launchBtn');
+            } catch (error) {
+                updateStatus('❌ Failed to setup ZHTP: ' + error, 'error');
+            }
+        }
+        
+        async function launchZHTP() {
+            updateStatus('Launching ZHTP network...', 'info');
+            updateProgress(90);
+            
+            try {
+                const result = await invoke('launch_zhtp');
+                updateStatus('✅ ' + result, 'success');
+                updateProgress(100);
+                hideButton('launchBtn');
+                showButton('browserBtn');
+                
+                // Auto-open browser after 3 seconds
+                setTimeout(() => {
+                    openBrowser();
+                }, 3000);
+            } catch (error) {
+                updateStatus('❌ Failed to launch ZHTP: ' + error, 'error');
+            }
+        }
+        
+        function openBrowser() {
+            window.__TAURI__.shell.open('http://localhost:4000/browser/');
+            updateStatus('🎉 ZHTP is running! Browser opened.', 'success');
+        }
+        
+        function updateStatus(message, type) {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = message;
+            statusEl.className = 'status ' + type;
+        }
+        
+        function updateProgress(percent) {
+            document.getElementById('progressBar').style.width = percent + '%';
+        }
+        
+        function showButton(id) {
+            document.getElementById(id).style.display = 'inline-block';
+        }
+        
+        function hideButton(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+        
+        // Auto-check system on load
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(checkSystem, 1000);
+        });
+    </script>
+</body>
+</html>

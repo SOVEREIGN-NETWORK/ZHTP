@@ -1,0 +1,45 @@
+{
+  "$schema": "https://schema.tauri.app/config/1.6",
+  "build": {
+    "beforeDevCommand": "",
+    "beforeBuildCommand": "",
+    "devPath": "../dist",
+    "distDir": "../dist"
+  },
+  "package": {
+    "productName": "ZHTP Network Installer",
+    "version": "1.0.0"
+  },
+  "tauri": {    "allowlist": {
+      "all": false,
+      "shell": {
+        "all": false,
+        "open": true
+      },
+      "fs": {
+        "all": true,
+        "scope": ["**"]
+      },
+      "process": {
+        "all": true
+      }
+    },    "bundle": {
+      "active": true,
+      "targets": "all",
+      "identifier": "com.zhtp.installer",
+      "icon": []
+    },
+    "security": {
+      "csp": null
+    },
+    "windows": [
+      {
+        "fullscreen": false,
+        "resizable": true,
+        "title": "ZHTP Network - One-Click Setup",
+        "width": 1000,
+        "height": 700
+      }
+    ]
+  }
+}

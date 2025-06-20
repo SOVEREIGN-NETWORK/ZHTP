@@ -1,0 +1,9 @@
+[package]
+name = "zhtp-contracts-minimal"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "zhtp_contracts"
+crate-type = ["cdylib"]
+path = "src/lib_minimal.rs"
